@@ -1,0 +1,245 @@
+from pydantic import BaseModel, PrivateAttr, model_validator, ValidationError, Field
+from typing import Literal
+from typing import Annotated
+
+
+# Input for Parser
+JJ5SY_PLUGIN_MFLD_EX120_TOKEN_MAP = [
+    {"name": "prefix", "pattern": r"JJ5SY", "length": 5},
+    {"name": "series", "pattern": r"[135]", "length": 1},
+    {"name": "separator", "pattern": r"-", "length": 1},
+
+    {"name": "type", "pattern": r"10", "length": 2},
+    {"name": "ex120", "pattern": r"S3", "length": 2},
+    {"name": "si_unit", "pattern": r"(ZBN|ZB|V|Q|0)", "length": None},
+    {"name": "separator", "pattern": r"-", "length": 1},
+
+    {"name": "valve_stations", "pattern": r"(02|03|04|05|06|07|08)", "length": 2},
+    {"name": "p_e_port_entry", "pattern": r"[UDB]", "length": 1},
+    {"name": "sup_exh", "pattern": r"[S]?", "length": None},
+    {"name": "separator", "pattern": r"-", "length": 1},
+
+    {"name": "a_b_port_size", "pattern": r'(?:C(?:2|4|6|8|10|12))', "length": None},
+    {"name": "mounting", "pattern": r"D?", "length": None, "optional": True},
+    {"name": "din_rail_opt", "pattern": r'(0|[3-9]|1[0-6])?', "length": None, "optional": True},
+]
+
+class JJ5SY_PLUG_IN_MFLD_EX120_MODEL(BaseModel):
+    # How to Order Information
+    prefix: Literal['JJ5SY']
+    series: Literal['1', '3', '5']
+    type: Literal['10']
+    ex120: Literal['S3']
+    si_unit: Literal['ZBN', 'ZB', 'V', 'Q', '0']
+    valve_stations: Literal['02', '03', '04', '05', '06', '07', '08']
+    p_e_port_entry: Literal['U', 'D', 'B']
+    sup_exh: Literal['', 'S'] = ''
+    a_b_port_size: Literal['C2', 'C4', 'C6', 'C8', 'C10', 'C12']
+    mounting: Literal['', 'D'] = ''
+    din_rail_opt: Literal['', '0', '3', '4', '5', '6', '7', '8', '9', '10',
+                            '11', '12', '13', '14', '15', '16'] = ''
+
+
+    @model_validator(mode='after')
+    def check_conditions(self) -> 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL':
+        if self.series == '1' and self.type == '10' and self.a_b_port_size not in ('C2', 'C4', 'C6'):
+            raise ValueError("Side ported 1000 series not compatible with A,B port size fittings")
+        if self.series == '3' and self.type == '10' and self.a_b_port_size not in ('C4', 'C6', 'C8'):
+            raise ValueError("Side ported 3000 series not compatible with A,B port size fittings")
+        if self.series == '5' and self.type == '10' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12'):
+            raise ValueError("Side ported 5000 series not compatible with A,B port size fittings")
+        if self.mounting in ('') and self.din_rail_opt not in (''):
+            raise ValueError('Direct mounting selected, no din rail option necessary')
+        if self.si_unit == '0' and (self.mounting != '' or self.din_rail_opt != ''):
+            raise ValueError('Din rail mounting cannot be selected if no SI unit is selected.')
+        return self
+
+    def build_part_number(self) -> str:
+        return (
+            f"{self.prefix}{self.series}"
+            f"-{self.type}{self.ex120}{self.si_unit}"
+            f"-{self.valve_stations}{self.p_e_port_entry}{self.sup_exh}"
+            f"-{self.a_b_port_size}{self.mounting}{self.din_rail_opt}"
+        )
+
+    def description(self) -> str:
+        return (
+            f"JSY{self.series}000 {self.valve_stations} STA EX120 MANIFOLD"
+        ) 
+
+#     # ------------- BOM ----- BOM ----- BOM ----- BOM ----- BOM ----- BOM ----- BOM  ----- BOM ------------- 
+
+#     # --- model_post_init is an option for actions taken after validation and cleaning by the base pydantic model (think "right after __init__ and validation but before return")
+#     # -- this call all function designed to create and validate child components such as the manifold block and sup/exh blocks
+#     def model_post_init(self, __context) -> None:
+#         self._init_manifold_block()
+#         self._init_sup_exh_block_d_side()
+#         self._init_sup_exh_block_u_side()
+    
+#     # ------------------------------------------- MANIFOLD BLOCK -------------------------------------------    
+#     _manifold_block: 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Manifold_Block' = PrivateAttr()
+    
+#     # Creates instance of fields inherited from top model into manifold block --> this will then be checked by pydantic model for the subcomponent
+#     def _init_manifold_block(self) -> None:
+#         # Logical Conditions
+#         if self.a_b_port_size == 'C6':
+#             block_pitch = '2'
+#         else:
+#             block_pitch = '1'
+        
+#         self._manifold_block = self.Manifold_Block(
+#             prefix = 'JSY',
+#             series = self.series,
+#             static = '1M',
+#             static2 = '2P',
+#             block_pitch = block_pitch,
+#             wiring_type = 'S', # hard encoded but has option 'D' for double wire which would requrire RFS
+#             static3 = 'A',
+#             a_b_port_size = self.a_b_port_size,
+
+#             # --- Non part number related values ---
+#             quantity = int(self.valve_stations)
+#         )
+
+#     @property
+#     def manifold_block(self) -> 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Manifold_Block':
+#         return self._manifold_block    
+    
+#     class Manifold_Block(BaseModel):
+#         # JSY[#]1M-2P-[#][#]A-[#]
+#         prefix: Literal['JSY']
+#         series: Literal['1', '3', '5'] 
+#         static: Literal['1M']
+#         static2: Literal['2P']
+#         block_pitch: Literal['1', '2']
+#         wiring_type: Literal['S', 'D']
+#         static3: Literal['A']
+#         a_b_port_size: Literal['C2', 'C3', 'C4', 'C6', 'C8', 'C10', 'C12']
+
+#         # --- Non part number related values ---
+#         quantity: int = Field(..., ge=2, le=24)
+        
+#         def build_part_number(self) -> str:
+#             return(
+#                 f"{self.prefix}{self.series}{self.static}"
+#                 f"-{self.static2}"
+#                 f"-{self.block_pitch}{self.wiring_type}{self.static3}"
+#                 f"-{self.a_b_port_size}"
+#             )
+            
+# # ------------------------------------------- SUP/EXH BLOCK (D-Side) -------------------------------------------    
+#     _sup_exh_block_d_side: 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Sup_Exh_Block_D_Side' = PrivateAttr()
+    
+#     # Creates instance of fields inherited from top model into sup exh block d-side --> this will then be checked by pydantic model for the subcomponent
+#     def _init_sup_exh_block_d_side(self) -> None:
+#         # Logical Conditions
+#         if self.din_rail_opt == '':
+#             mounting = ''
+#         else:
+#             mounting = 'D0'
+        
+#         if self.series == '1':
+#             a_b_port_size = 'C8'
+#         elif self.series == '3':
+#             a_b_port_size = 'C10'
+#         elif self.series == '5':
+#             a_b_port_size = 'C12'
+        
+#         self._sup_exh_block_d_side = self.Sup_Exh_Block_D_Side(
+#             prefix = 'JSY',
+#             series = self.series,
+#             static = '1M',
+#             static2 = '1P',
+#             static3 = '1A',
+#             pilot_silencer_type = self.sup_exh,
+#             a_b_port_size = a_b_port_size,
+#             mounting = mounting,
+
+#             # --- Non part number related values ---
+#             quantity = int(1)
+#         )
+
+#     @property
+#     def sup_exh_block_d_side(self) -> 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Sup_Exh_Block_D_Side':
+#         return self._sup_exh_block_d_side    
+    
+#     class Sup_Exh_Block_D_Side(BaseModel):
+#         # D-Sub Connector (IP67) --- JSY[#]1M-1P-1A[#]-[#][#]
+#         prefix: Literal['JSY']
+#         series: Literal['1', '3', '5'] 
+#         static: Literal['1M']
+#         static2: Literal['1P']
+#         static3: Literal['1A']
+#         pilot_silencer_type: Literal['', 'S', 'R'] = '' # R is external pilot, this is made to order (Page 152)
+#         a_b_port_size: Literal['C2', 'C3', 'C4', 'C6', 'C8', 'C10', 'C12']
+#         mounting: Literal['', 'D0'] = '' # if any din_rail_opt is selected on manifold (ex. D0, D3, D17), this should be D0, else nil
+
+#         # --- Non part number related values ---
+#         quantity: int = 1
+        
+#         def build_part_number(self) -> str:
+#             return(
+#                 f"{self.prefix}{self.series}{self.static}"
+#                 f"-{self.static2}"
+#                 f"-{self.static3}{self.pilot_silencer_type}"
+#                 f"-{self.a_b_port_size}{self.mounting}"
+#             )  
+# # ------------------------------------------- SUP/EXH BLOCK (U-Side) -------------------------------------------    
+#     _sup_exh_block_u_side: 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Sup_Exh_Block_U_Side' = PrivateAttr()
+    
+#     # Creates instance of fields inherited from top model into sup exh block d-side --> this will then be checked by pydantic model for the subcomponent
+#     def _init_sup_exh_block_u_side(self) -> None:
+#         # Logical Conditions
+#         if self.din_rail_opt == '':
+#             mounting = ''
+#         else:
+#             mounting = 'D0'
+        
+#         if self.series == '1':
+#             a_b_port_size = 'C8'
+#         elif self.series == '3':
+#             a_b_port_size = 'C10'
+#         elif self.series == '5':
+#             a_b_port_size = 'C12'
+        
+#         self._sup_exh_block_u_side = self.Sup_Exh_Block_U_Side(
+#             prefix = 'JSY',
+#             series = self.series,
+#             static = '1M',
+#             static2 = '3P',
+#             static3 = '1A',
+#             pilot_silencer_type = self.sup_exh,
+#             a_b_port_size = a_b_port_size,
+#             mounting = mounting,
+
+#             # --- Non part number related values ---
+#             quantity = int(1)
+#         )
+
+#     @property
+#     def sup_exh_block_u_side(self) -> 'JJ5SY_PLUG_IN_MFLD_EX120_MODEL.Sup_Exh_Block_U_Side':
+#         return self._sup_exh_block_u_side    
+    
+#     class Sup_Exh_Block_U_Side(BaseModel):
+#         # D-Sub Connector (IP67) --- JSY[#]1M-1P-1A[#]-[#][#]
+#         prefix: Literal['JSY']
+#         series: Literal['1', '3', '5'] 
+#         static: Literal['1M']
+#         static2: Literal['3P']
+#         static3: Literal['1A']
+#         pilot_silencer_type: Literal['', 'S', 'R'] = '' # R is external pilot, this is made to order (Page 152)
+#         a_b_port_size: Literal['C2', 'C3', 'C4', 'C6', 'C8', 'C10', 'C12']
+#         mounting: Literal['', 'D0'] = '' # if any din_rail_opt is selected on manifold (ex. D0, D3, D17), this should be D0, else nil
+
+#         # --- Non part number related values ---
+#         quantity: int = 1
+        
+#         def build_part_number(self) -> str:
+#             return(
+#                 f"{self.prefix}{self.series}{self.static}"
+#                 f"-{self.static2}"
+#                 f"-{self.static3}{self.pilot_silencer_type}"
+#                 f"-{self.a_b_port_size}{self.mounting}"
+#             )
+
+# # ------------------------------------------- ---------------------- ------------------------------------------- 
