@@ -17,6 +17,10 @@ from jsy_nonplugin.manifold_metalbase import JJ5SY_NONPLUGIN_MFLD_METALBASE_MODE
 
 # ----- SY-1 -----
 from SY1.manifold_type_10_11_dsub_flatribbon import SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL, SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_TOKEN_MAP
+from SY1.valve_base_mounted import SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL, SY1_BASE_MOUNTED_PLUGIN_VALVE_TOKEN_MAP
+
+# ----- SY -----
+from SY.valve_body_ported import SY_BODY_PORTED_VALVE_MODEL, SY_BODY_PORTED_VALVE_TOKEN_MAP
 
 # ----- GENERAL FUNCTIONS -----
 from general_functions.parser import TokenMapParser
@@ -25,9 +29,14 @@ from pydantic import ValidationError
 import pandas as pd
 import re
 
-# -------------------------- MAIN CODE --------------------------
+# -------------------------- Page Setup --------------------------
+st.set_page_config(
+    page_title="validator",
+    page_icon="",
+    layout="centered"
+)
 
-st.title("JSY Part Number Validator")
+st.title("Part Number Validator")
 
 # Regex Pattern Matching for Model Recognition
 # --------------------- JSY ---------------------------
@@ -44,9 +53,13 @@ JSY_EX120_MANIFOLD = r"^JJ5SY[135]-10S3(ZBN|ZB|V|Q|0)-"
 # --- non plugin
 JSY_METALBASE_MANIFOLD = r"^JJ5SY[135]-(40|41)"
 
-# --------------------- --- ---------------------------
+
 # --------------------- SY1 ---------------------------
 SY1_TYPE_10_11_DSUB_MANIFOLD = r"^SS5Y[357]-(10|11)(F|FW|P|PG|PH)"
+SY1_BASE_MOUNTED_PLUGIN_VALVE = r"^SY[357][ABC12345]0"
+
+# ---------------------- SY ---------------------------
+SY_BODY_PORTED_VALVE = r"^SY[3579][12345]20"
 
 # ---------- USER INPUT ----------
 
@@ -95,6 +108,16 @@ if part_number:
     elif re.match(SY1_TYPE_10_11_DSUB_MANIFOLD, part_number):
         model = SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL
         token_map = SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_TOKEN_MAP
+
+    # ------------------ SY1 VALVES ------------------
+    elif re.match(SY1_BASE_MOUNTED_PLUGIN_VALVE, part_number):
+        model = SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL
+        token_map = SY1_BASE_MOUNTED_PLUGIN_VALVE_TOKEN_MAP
+
+    # ------------------ SY VALVES -------------------
+    elif re.match(SY_BODY_PORTED_VALVE, part_number):
+        model = SY_BODY_PORTED_VALVE_MODEL
+        token_map = SY_BODY_PORTED_VALVE_TOKEN_MAP
 
     else:
     # checking valve options
