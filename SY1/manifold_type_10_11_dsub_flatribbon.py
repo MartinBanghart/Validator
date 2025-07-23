@@ -8,18 +8,18 @@ SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_TOKEN_MAP = [
     {"name": "separator", "pattern": r"-", "length": 1},
 
     {"name": "type", "pattern": r"(10|11)", "length": 2},
-    {"name": "connector_type", "pattern": r"(F|FW|P|PG|PH)", "length": None},
+    {"name": "connector_type", "pattern": r"(FW|F|PG|PH|P)", "length": None},
     {"name": "connector_entry_direction", "pattern": r"(1|2)", "length": 1},
     {"name": "separator", "pattern": r"-", "length": 1},
 
-    {"name": "valve_stations", "pattern": r"(02|03|04|05|06|07|08|09|10|11|12)", "length": 2},
+    {"name": "valve_stations", "pattern": r"(02|03|04|05|06|07|08|09|10|11|12|13|14|15|16)", "length": 2},
     {"name": "p_e_port_entry", "pattern": r"[UDB]", "length": 1},
     {"name": "sup_exh", "pattern": r"[SR]?", "length": None},
     {"name": "separator", "pattern": r"-", "length": 1},
 
     {"name": "a_b_port_size", "pattern": r'(?:C(?:2|3|4|6|8|10|12)|L(?:4|6|8|10|12)|B(?:4|6|8|10|12)|N(?:1|3|7|9|11)|LN(?:3|7|9|11)|BN(?:3|7|9|11))', "length": None},
     {"name": "mounting", "pattern": r"(AA|BA|D|A|B)?", "length": None},
-    {"name": "din_rail_opt", "pattern": r'(0|[3-9]|1[0-9]|2[0-4])', "length": None},
+    {"name": "din_rail_opt", "pattern": r'(0|[3-9]|1[0-9]|2[0-4])?', "length": None},
 ]
 
 class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
@@ -29,7 +29,8 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
     type: Literal['10', '11']
     connector_type: Literal['F', 'FW', 'P', 'PG', 'PH']
     connector_entry_direction: Literal['1', '2']
-    valve_stations: Literal['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    valve_stations: Literal['02', '03', '04', '05', '06', '07', '08', '09', 
+                            '10', '11', '12', '13', '14', '15', '16']
     p_e_port_entry: Literal['U', 'D', 'B']
     sup_exh: Literal['', 'S', 'R'] = ''
     a_b_port_size: Literal['C2', 'C3', 'C4', 'C6', 'C8', 'C10', 'C12',
@@ -45,16 +46,25 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
 
     @model_validator(mode='after')
     def check_conditions(self) -> 'SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL':
+        # --- VARIABLES ---
+        if self.din_rail_opt:
+            din_rail_value = int(self.din_rail_opt)
+        else:
+            din_rail_value = 0
+        valve_stations_value = int(self.valve_stations)
+
         # --- Connector Entry Direction ---
         if self.connector_entry_direction == '2' and self.connector_type == 'FW':
             raise ValueError('FW Connector type cannot be rotated')
+        
         # --- Valve Stations ---
-        if self.connector_type in ('F', 'FW', 'P') and self.valve_stations in ('13', '14', '15', '16'):
+        if self.connector_type in ('F', 'FW', 'P') and valve_stations_value > 12:
             raise ValueError('Too many valve stations selected for connector type')
-        if self.connector_type in ('PG') and self.valve_stations in ('10', '11', '12', '13', '14', '15', '16'):
+        if self.connector_type in ('PG') and valve_stations_value > 9:
             raise ValueError('Too many valve stations selected for connector type') 
-        if self.connector_type in ('PH') and self.valve_stations not in ('02', '03', '04'):
+        if self.connector_type in ('PH') and valve_stations_value > 4:
             raise ValueError('Too many valve stations selected for connector type')
+        
         # --- A, B Port Size Fittings ---
         if self.series == '3' and self.type == '10' and self.a_b_port_size not in ('C2', 'C3', 'C4', 'C6', 'L4', 'L6', 'B4', 'B6', 'N1', 'N3', 'N7', 'LN3', 'LN7', 'BN3', 'BN7'):
             raise ValueError("Side ported 3000 series not compatible with A,B Port Size Fittings")
@@ -68,9 +78,14 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
             raise ValueError("Bottom ported 5000 series not compatible with A,B port size fittings")
         if self.series == '7' and self.type == '11' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12', 'N7', 'N9', 'N11'):
             raise ValueError("Bottom ported 7000 series not compatible with A,B port size fittings")
+        
         # --- Din Rail Mounting --
         if self.mounting not in ('D', 'A', 'B') and self.din_rail_opt != '':
             raise ValueError('Mounting option does not require din rail option')
+        if self.din_rail_opt != '':
+            if din_rail_value != 0 and din_rail_value < valve_stations_value:
+                raise ValueError('Din rail option must be equal to or greater than valve stations')
+
         return self
 
     def build_part_number(self) -> str:

@@ -31,6 +31,7 @@ from jsy_nonplugin.manifold_metalbase import JJ5SY_NONPLUGIN_MFLD_METALBASE_MODE
 
 # -------------------------- SY-1 --------------------------
 from SY1.manifold_type_10_11_dsub_flatribbon import SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL 
+from SY1.manifold_type_10_11_terminal_block_spring_type import SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL
 from SY1.valve_base_mounted import SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL
 
 # -------------------------- SY ----------------------------
@@ -55,6 +56,7 @@ MODEL_SERIES_MAP = {
 
     "SY-1": {
         "SY-1 Type 10/11 DSUB Manifold" : SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL,
+        "SY-1 Type 10/11 Terminal Block Manifold" : SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL,
         "SY-1 Base Mounted Valve" : SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL
     },
 

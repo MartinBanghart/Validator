@@ -17,6 +17,7 @@ from jsy_nonplugin.manifold_metalbase import JJ5SY_NONPLUGIN_MFLD_METALBASE_MODE
 
 # ----- SY-1 -----
 from SY1.manifold_type_10_11_dsub_flatribbon import SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL, SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_TOKEN_MAP
+from SY1.manifold_type_10_11_terminal_block_spring_type import SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL, SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_TOKEN_MAP
 from SY1.valve_base_mounted import SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL, SY1_BASE_MOUNTED_PLUGIN_VALVE_TOKEN_MAP
 
 # ----- SY -----
@@ -42,7 +43,7 @@ st.title("Part Number Validator")
 # --------------------- JSY ---------------------------
 # --- plugin
 VALVE_DETECTOR = r"^JSY(?P<series>[135])(?P<actuation>[1-5A-C])(?P<static>\d{2})" # actually covers both plugin and non plugin
-JSY_DSUB_MANIFOLD = r"^JJ5SY[135]-10(F|FW|FC|P|PG|PH|PC|PGC|PHC)[12]-"
+JSY_DSUB_MANIFOLD = r"^JJ5SY[135]-10(FW|FC|F|PG|PHC|PH|PGC|PC|P)[12]-"
 JSY_TERMINAL_BOX_MANIFOLD = r"^JJ5SY[135]-10(TC|T)-"
 JSY_LEADWIRE_MANIFOLD = r"^JJ5SY[135]-10(L1|L2|L3)[123]-"
 JSY_EX600_MANIFOLD = r"^JJ5SY[135]-10S6"
@@ -55,7 +56,8 @@ JSY_METALBASE_MANIFOLD = r"^JJ5SY[135]-(40|41)"
 
 
 # --------------------- SY1 ---------------------------
-SY1_TYPE_10_11_DSUB_MANIFOLD = r"^SS5Y[357]-(10|11)(F|FW|P|PG|PH)"
+SY1_TYPE_10_11_DSUB_MANIFOLD = r"^SS5Y[357]-(10|11)(FW|F|PG|PH|P)"
+SY1_TYPE_10_11_TERMINAL_BLOCK = r"^SS5Y[357]-(10|11)(TC|T)"
 SY1_BASE_MOUNTED_PLUGIN_VALVE = r"^SY[357][ABC12345]0"
 
 # ---------------------- SY ---------------------------
@@ -108,6 +110,10 @@ if part_number:
     elif re.match(SY1_TYPE_10_11_DSUB_MANIFOLD, part_number):
         model = SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL
         token_map = SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_TOKEN_MAP
+
+    elif re.match(SY1_TYPE_10_11_TERMINAL_BLOCK, part_number):
+        model = SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL
+        token_map = SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_TOKEN_MAP
 
     # ------------------ SY1 VALVES ------------------
     elif re.match(SY1_BASE_MOUNTED_PLUGIN_VALVE, part_number):
