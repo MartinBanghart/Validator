@@ -24,6 +24,7 @@ from jsy_plugin.manifold_ex600 import JJ5SY_PLUGIN_MFLD_EX600_MODEL
 from jsy_plugin.manifold_ex260 import JJ5SY_PLUGIN_MFLD_EX260_MODEL 
 from jsy_plugin.manifold_ex260_profisafe import JJ5SY_PLUGIN_MFLD_EX260_PROFISAFE_MODEL 
 from jsy_plugin.manifold_ex120 import JJ5SY_PLUG_IN_MFLD_EX120_MODEL 
+from jsy_plugin.manifold_jsy_e import JJ5SY_PLUGIN_EJECTOR_MANIFOLD_MODEL
 
 # ----- NON PLUG IN -----
 from jsy_nonplugin.valve import JSY_NONPLUGIN_VALVE_MODEL 
@@ -50,7 +51,8 @@ MODEL_SERIES_MAP = {
         "JSY EX120 Manifold" : JJ5SY_PLUG_IN_MFLD_EX120_MODEL,
 
         "JSY Non Plugin Valve" : JSY_NONPLUGIN_VALVE_MODEL,
-        "JSY Metalbase Manifold" : JJ5SY_NONPLUGIN_MFLD_METALBASE_MODEL
+        "JSY Metalbase Manifold" : JJ5SY_NONPLUGIN_MFLD_METALBASE_MODEL,
+        "JSY Ejector Manifold" : JJ5SY_PLUGIN_EJECTOR_MANIFOLD_MODEL
     },
 
     "SY-1": {
