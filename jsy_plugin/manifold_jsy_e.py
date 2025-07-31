@@ -51,6 +51,13 @@ class JJ5SY_PLUGIN_EJECTOR_MANIFOLD_MODEL(BaseModel):
 
     @model_validator(mode='after')
     def check_conditions(self) -> 'JJ5SY_PLUGIN_EJECTOR_MANIFOLD_MODEL':
+        # --- VARIABLES ---
+        pressure_sensors_val = int(self.pressure_sensors)
+        valve_stations_val = int(self.valve_stations)
+        
+        if pressure_sensors_val > valve_stations_val:
+            raise ValueError('Too many pressure sensors for number of valve stations')
+        
         if self.mounting in ('') and self.din_rail_opt not in (''):
             raise ValueError('Direct mounting selected, no din rail option necessary')
         if self.p_e_port_entry in ('U', 'D', 'C', 'E') and self.valve_stations in ('11', '12', '13', '14', '15', '16'):
@@ -64,6 +71,7 @@ class JJ5SY_PLUGIN_EJECTOR_MANIFOLD_MODEL(BaseModel):
             f"{self.prefix}{self.series}"
             f"-{self.type}{self.ex}{self.si_unit}"
             f"-{self.valve_stations}{self.p_e_port_entry}{self.sup_exh_block_assy}"
+            f"-{self.pressure_sensors}{self.pilot_air_control}"
             f"-{self.a_b_port_size}{self.mounting}{self.din_rail_opt}"
         )
 
