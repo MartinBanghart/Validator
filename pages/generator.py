@@ -167,7 +167,7 @@ with col1:
             user_defaults[field_name] = choices[0]
         else:
             selection = st.selectbox(
-                f"{field_name}:",
+                f"{field_name.replace('_', ' ').title()}:",
                 ["random"] + list(choices),
                 key=field_name
             )

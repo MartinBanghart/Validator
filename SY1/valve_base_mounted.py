@@ -8,7 +8,7 @@ class SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL(BaseModel):
     prefix: Literal['SY']
     series: Literal['3', '5', '7']
     actuation_type: Literal['1', '2', '3', '4', '5', 'A', 'B', 'C']
-    static: Literal['0']
+    static: Literal['0'] # --- base mounted
     seal_type: Literal['0', '1']
     pilot_type: Literal['', 'R'] = ''
     back_pressure_check_valve: Literal['', 'H']

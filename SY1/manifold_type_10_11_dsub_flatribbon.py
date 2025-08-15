@@ -44,8 +44,45 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
                             '11', '12', '13', '14', '15', '16', '17', '18',
                             '19', '20', '21', '22', '23', '24'] = ''
 
+
+# # # ------ IDEA FOR IMPROVING ERROR DISPLAY
+# @model_validator(mode='after')
+# def check_conditions(self):
+#     errors = []
+
+#     if self.connector_entry_direction == '2' and self.connector_type == 'FW':
+#         errors.append({
+#             'type': 'value_error',
+#             'loc': ('connector_entry_direction',),
+#             'msg': 'FW Connector type cannot be rotated',
+#             'input': self.model_dump(),
+#         })
+
+#     v = int(self.valve_stations)
+#     if self.connector_type in ('F', 'FW', 'P') and v > 12:
+#         errors.append({
+#             'type': 'value_error',
+#             'loc': ('valve_stations',),
+#             'msg': 'Too many valve stations selected for connector type',
+#             'input': self.model_dump(),
+#         })
+
+#     # ...more errors appended similarly...
+
+#     if errors:
+#         # Title can be anything; it appears in the exception repr, not in msg
+#         raise ValidationError.from_exception_data(self.__class__.__name__, errors)
+
+#     return self
+
+
+
+
+
     @model_validator(mode='after')
     def check_conditions(self) -> 'SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL':
+        errors = []
+        
         # --- VARIABLES ---
         if self.din_rail_opt:
             din_rail_value = int(self.din_rail_opt)
@@ -55,37 +92,40 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
 
         # --- Connector Entry Direction ---
         if self.connector_entry_direction == '2' and self.connector_type == 'FW':
-            raise ValueError('FW Connector type cannot be rotated')
+            errors.append('FW Connector type cannot be rotated')
         
         # --- Valve Stations ---
         if self.connector_type in ('F', 'FW', 'P') and valve_stations_value > 12:
-            raise ValueError('Too many valve stations selected for connector type')
+            errors.append('Too many valve stations selected for connector type')
         if self.connector_type in ('PG') and valve_stations_value > 9:
-            raise ValueError('Too many valve stations selected for connector type') 
+            errors.append('Too many valve stations selected for connector type') 
         if self.connector_type in ('PH') and valve_stations_value > 4:
-            raise ValueError('Too many valve stations selected for connector type')
+            errors.append('Too many valve stations selected for connector type')
         
         # --- A, B Port Size Fittings ---
         if self.series == '3' and self.type == '10' and self.a_b_port_size not in ('C2', 'C3', 'C4', 'C6', 'L4', 'L6', 'B4', 'B6', 'N1', 'N3', 'N7', 'LN3', 'LN7', 'BN3', 'BN7'):
-            raise ValueError("Side ported 3000 series not compatible with A,B Port Size Fittings")
+            errors.append("Side ported 3000 series not compatible with A,B Port Size Fittings")
         if self.series == '5' and self.type == '10' and self.a_b_port_size not in ('C4', 'C6', 'C8', 'L4', 'L6', 'L8', 'B4', 'B6', 'B8', 'N3', 'N7', 'N9', 'LN7', 'LN9', 'BN7', 'BN9'):
-            raise ValueError("Side ported 5000 series not compatible with A,B port size fittings")
+            errors.append("Side ported 5000 series not compatible with A,B port size fittings")
         if self.series == '7' and self.type == '10' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12', 'L6', 'L8', 'L10', 'L12', 'B6', 'B8', 'B10', 'B12', 'N7', 'N9', 'N11', 'LN11', 'BN11'):
-            raise ValueError("Side ported 7000 series not compatible with A,B port size fittings")
+            errors.append("Side ported 7000 series not compatible with A,B port size fittings")
         if self.series == '3' and self.type == '11':
-            raise ValueError("Type 11, 3000 series uses SY5000 manifold base - see 'Plug-in mixed mounting type manifold' section in catalog")
+            errors.append("Type 11, 3000 series uses SY5000 manifold base - see 'Plug-in mixed mounting type manifold' section in catalog")
         if self.series == '5' and self.type == '11' and self.a_b_port_size not in ('C4', 'C6', 'C8', 'N3', 'N7', 'N9'):
-            raise ValueError("Bottom ported 5000 series not compatible with A,B port size fittings")
+            errors.append("Bottom ported 5000 series not compatible with A,B port size fittings")
         if self.series == '7' and self.type == '11' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12', 'N7', 'N9', 'N11'):
-            raise ValueError("Bottom ported 7000 series not compatible with A,B port size fittings")
+            errors.append("Bottom ported 7000 series not compatible with A,B port size fittings")
         
         # --- Din Rail Mounting --
         if self.mounting not in ('D', 'A', 'B') and self.din_rail_opt != '':
-            raise ValueError('Mounting option does not require din rail option')
+            errors.append('Mounting option does not require din rail option')
         if self.din_rail_opt != '':
             if din_rail_value != 0 and din_rail_value < valve_stations_value:
-                raise ValueError('Din rail option must be equal to or greater than valve stations')
+                errors.append('Din rail option must be equal to or greater than valve stations')
 
+        if errors:
+            # single ValueError with newline-joined messages
+            raise ValueError("\n".join(errors))
         return self
 
     def build_part_number(self) -> str:
@@ -105,6 +145,11 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
         return (
             f"SY-1 {self.series}000 {self.valve_stations} STA {connector} MANIFOLD"
         )
+    
+    
+    
+    
+    
     
 #     # ------------- BOM ----- BOM ----- BOM ----- BOM ----- BOM ----- BOM ----- BOM  ----- BOM ------------- 
 

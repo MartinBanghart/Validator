@@ -166,8 +166,11 @@ if part_number:
     except ValidationError as e:
         st.error("❌ Validation error:")
         for err in e.errors():
-            message = err["msg"].removeprefix("Value error, ")
-            st.markdown(f"{message}")
+            msg = err["msg"]
+            if msg.lower().startswith("value error, "):
+                msg = msg[len("Value error, "):]
+            for line in msg.splitlines():
+                st.write(f"• {line}")
 
         if "tokens" in locals():
             st.subheader("Parsed Tokens")
