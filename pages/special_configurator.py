@@ -83,36 +83,37 @@ with col1:
             - Then, configure the manifold to your specifications
             - Click __________________ to ____________
             """)
+    with st.container(border=True):
+        st.subheader("Configure Manifold")
+        user_defaults = {}
+        literal_fields = get_literal_fields(model_class)
 
-    st.subheader("Configure Manifold")
-    user_defaults = {}
-    literal_fields = get_literal_fields(model_class)
-
-    for field_name, choices in literal_fields.items():
-        if len(choices) == 1:
-            # Auto-apply the only available choice
-            user_defaults[field_name] = choices[0]
-        else:
-            selection = st.selectbox(
-                f"{field_name.replace('_', ' ').title()}:",
-                list(choices),
-                key=field_name
-            )
-            user_defaults[field_name] = selection 
+        for field_name, choices in literal_fields.items():
+            if len(choices) == 1:
+                # Auto-apply the only available choice
+                user_defaults[field_name] = choices[0]
+            else:
+                selection = st.selectbox(
+                    f"{field_name.replace('_', ' ').title()}:",
+                    list(choices),
+                    key=field_name
+                )
+                user_defaults[field_name] = selection 
 
 with col2:
     try:
         model_instance = model_class(**user_defaults)
         st.subheader("Part Number Preview")
-        st.subheader(f"**{model_instance.build_part_number()}**")
-        st.divider()
+        st.success(f"**{model_instance.build_part_number()}**")
         
-        # generate line for each stations
-        for sta in range(int(user_defaults['valve_stations'])):
-            st.markdown(f"Valve Station {sta + 2}:")
-        
-        
+        with st.container(border=True):
+            st.subheader('Configure Valves')
 
+            # generate line for each stations
+            for sta in range(int(user_defaults['valve_stations'])):
+                st.markdown(f"Valve Station {sta + 2}:")
+        
+        
     except ValidationError as e:
         st.error("Invalid configuration")
         for err in e.errors():
