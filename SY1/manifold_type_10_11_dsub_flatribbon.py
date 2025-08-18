@@ -75,10 +75,6 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
 
 #     return self
 
-
-
-
-
     @model_validator(mode='after')
     def check_conditions(self) -> 'SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL':
         errors = []
@@ -118,7 +114,7 @@ class SY1_MFLD_TYPE_10_11_DSUB_FLATRIBBON_MODEL(BaseModel):
         
         # --- Din Rail Mounting --
         if self.mounting not in ('D', 'A', 'B') and self.din_rail_opt != '':
-            errors.append('Mounting option does not require din rail option')
+            errors.append('Mounting option does not require din rail option - change mounting if din rail is necessary')
         if self.din_rail_opt != '':
             if din_rail_value != 0 and din_rail_value < valve_stations_value:
                 errors.append('Din rail option must be equal to or greater than valve stations')

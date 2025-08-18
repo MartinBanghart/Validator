@@ -30,7 +30,7 @@ class SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL(BaseModel):
     series: Literal['3', '5', '7']
     type: Literal['10', '11']
     connector_type: Literal['TC', 'T']
-    valve_stations: Literal['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
+    valve_stations: Literal['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
                             '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']
     p_e_port_entry: Literal['U', 'D', 'B']
     sup_exh: Literal['', 'S', 'R'] = ''
@@ -47,6 +47,8 @@ class SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL(BaseModel):
 
     @model_validator(mode='after')
     def check_conditions(self) -> 'SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL':
+        errors = []
+        
         # --- VARIABLES ---
         if self.din_rail_opt:
             din_rail_value = int(self.din_rail_opt)
@@ -56,30 +58,36 @@ class SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_MODEL(BaseModel):
 
         # --- Valve Stations ---
         if valve_stations_value > 16 and self.connector_type == 'TC':
-            raise ValueError("RFS required: Manifold must be single wired when there are more than 16 valve stations")
+            errors.append("RFS required: Manifold must be single wired when there are more than 16 valve stations")
         if valve_stations_value > 10 and self.connector_type == 'T':
-            raise ValueError("RFS required: Manifold must be single wired when there are more than 10 valve stations")
+            errors.append("RFS required: Manifold must be single wired when there are more than 10 valve stations")
         
         # --- A, B Port Size Fittings ---
         if self.series == '3' and self.type == '10' and self.a_b_port_size not in ('C2', 'C3', 'C4', 'C6', 'L4', 'L6', 'B4', 'B6', 'N1', 'N3', 'N7', 'LN3', 'LN7', 'BN3', 'BN7'):
-            raise ValueError("Side ported 3000 series not compatible with A,B Port Size Fittings")
+            errors.append("Side ported 3000 series not compatible with A,B Port Size Fittings")
         if self.series == '5' and self.type == '10' and self.a_b_port_size not in ('C4', 'C6', 'C8', 'L4', 'L6', 'L8', 'B4', 'B6', 'B8', 'N3', 'N7', 'N9', 'LN7', 'LN9', 'BN7', 'BN9'):
-            raise ValueError("Side ported 5000 series not compatible with A,B port size fittings")
+            errors.append("Side ported 5000 series not compatible with A,B port size fittings")
         if self.series == '7' and self.type == '10' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12', 'L6', 'L8', 'L10', 'L12', 'B6', 'B8', 'B10', 'B12', 'N7', 'N9', 'N11', 'LN11', 'BN11'):
-            raise ValueError("Side ported 7000 series not compatible with A,B port size fittings")
+            errors.append("Side ported 7000 series not compatible with A,B port size fittings")
+        if self.series == '3' and self.type == '11':
+            errors.append("Type 11, 3000 series uses SY5000 manifold base - see 'Plug-in mixed mounting type manifold' section in catalog")
         if self.series == '5' and self.type == '11' and self.a_b_port_size not in ('C4', 'C6', 'C8', 'N3', 'N7', 'N9'):
-            raise ValueError("Bottom ported 5000 series not compatible with A,B port size fittings")
+            errors.append("Bottom ported 5000 series not compatible with A,B port size fittings")
         if self.series == '7' and self.type == '11' and self.a_b_port_size not in ('C6', 'C8', 'C10', 'C12', 'N7', 'N9', 'N11'):
-            raise ValueError("Bottom ported 7000 series not compatible with A,B port size fittings")
+            errors.append("Bottom ported 7000 series not compatible with A,B port size fittings")
         
         # --- Din Rail Mounting --
         if self.mounting not in ('D', 'A', 'B') and self.din_rail_opt != '':
-            raise ValueError('Mounting option does not require din rail option')
+            errors.append('Mounting option does not require din rail option - change mounting if din rail is necessary')
         if self.din_rail_opt != '':
             if din_rail_value != 0 and din_rail_value < valve_stations_value:
-                raise ValueError('Din rail option must be equal to or greater than valve stations') 
+                errors.append('Din rail option must be equal to or greater than valve stations') 
         if din_rail_value > 20 and self.connector_type == "T":
-            raise ValueError('Din rail option is too long for Terminal Block Box')       
+            errors.append('Din rail option is too long for Terminal Block Box')       
+            
+        if errors:
+            # single ValueError with newline-joined messages
+            raise ValueError("\n".join(errors))
         return self
 
     def build_part_number(self) -> str:

@@ -21,28 +21,54 @@ class SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL(BaseModel):
     mounting_screw: Literal['', 'B', 'K', 'H']
 
 # === Model logical Statements, write conditions specified in How to Order here ===
+    # @model_validator(mode='after')
+    # def validate_conditions(self) -> 'SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL':
+    #     if self.actuation_type in ('A', 'B', 'C') and self.seal_type != '0':
+    #         raise ValueError("4 position dual 3-port valve only available with rubber seal type")
+    #     if self.back_pressure_check_valve == 'H' and self.seal_type != '0':
+    #         raise ValueError("Back pressure check valve only available for rubber seal type")
+    #     if self.back_pressure_check_valve == 'H' and self.actuation_type in ('3', '4', '5'):
+    #         raise ValueError("Back pressure valve is not availabe for 3 position type valves")
+    #     if self.back_pressure_check_valve == 'H' and self.series == '7':
+    #         raise ValueError('Back pressure check valve is not availabe for SY7000')
+    #     if self.pilot_valve == 'K' and self.seal_type != '1':
+    #         raise ValueError('The high pressure pilot valve type is only available with metal seal type')
+    #     if self.light_surge_voltage_suppressor not in ('Z', 'NZ') and self.coil_type == 'T':
+    #         raise ValueError('Only Z and NZ light surge voltage suppressors are available with power saving circuit')
+    #     return self
+    
+
     @model_validator(mode='after')
     def validate_conditions(self) -> 'SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL':
+        errors = []
+        
         if self.actuation_type in ('A', 'B', 'C') and self.seal_type != '0':
-            raise ValueError("4 position dual 3-port valve only available with rubber seal type")
+            errors.append("4 position dual 3-port valve only available with rubber seal type")
         if self.back_pressure_check_valve == 'H' and self.seal_type != '0':
-            raise ValueError("Back pressure check valve only available for rubber seal type")
+            errors.append("Back pressure check valve only available for rubber seal type")
         if self.back_pressure_check_valve == 'H' and self.actuation_type in ('3', '4', '5'):
-            raise ValueError("Back pressure valve is not availabe for 3 position type valves")
+            errors.append("Back pressure valve is not availabe for 3 position type valves")
         if self.back_pressure_check_valve == 'H' and self.series == '7':
-            raise ValueError('Back pressure check valve is not availabe for SY7000')
+            errors.append('Back pressure check valve is not availabe for SY7000')
         if self.pilot_valve == 'K' and self.seal_type != '1':
-            raise ValueError('The high pressure pilot valve type is only available with metal seal type')
+            errors.append('The high pressure pilot valve type is only available with metal seal type')
         if self.light_surge_voltage_suppressor not in ('Z', 'NZ') and self.coil_type == 'T':
-            raise ValueError('Only Z and NZ light surge voltage suppressors are available with power saving circuit')
-
+            errors.append('Only Z and NZ light surge voltage suppressors are available with power saving circuit')
+        
+        if errors:
+            # single ValueError with newline-joined messages
+            raise ValueError("\n".join(errors))
         return self
 
     def build_part_number(self) -> str:
+        # Determine if separator is needed before mounting screw
+        mounting_section = f"-{self.mounting_screw}" if self.mounting_screw else ""
+
         return (
-            f"{self.prefix}{self.series}{self.actuation_type}{self.static}{self.seal_type}{self.pilot_type}{self.back_pressure_check_valve}{self.pilot_valve}{self.coil_type}"
+            f"{self.prefix}{self.series}{self.actuation_type}{self.static}{self.seal_type}"
+            f"{self.pilot_type}{self.back_pressure_check_valve}{self.pilot_valve}{self.coil_type}"
             f"-{self.rated_voltage}{self.light_surge_voltage_suppressor}{self.manual_override}{self.static2}"
-            f"-{self.mounting_screw}" 
+            f"{mounting_section}"
         )
 
     def description(self) -> str:
@@ -65,7 +91,7 @@ SY1_BASE_MOUNTED_PLUGIN_VALVE_TOKEN_MAP = [
     {"name": "light_surge_voltage_suppressor", "pattern": r"(NZ|NS|Z|S|U|R)?", "length": None},
     {"name": "manual_override", "pattern": r"[DEF]?", "length": None},
     {"name": "static2", "pattern": r"1", "length": 1},
-    {"name": "separator", "pattern": r"-", "length": 1},
+    {"name": "separator", "pattern": r"-?", "length": 1},
 
     {"name": "mounting_screw", "pattern": r"[BKH]?", "length": None}
 ]
