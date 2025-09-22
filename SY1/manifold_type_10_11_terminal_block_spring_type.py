@@ -1,10 +1,8 @@
-from pydantic import BaseModel, field_validator, PrivateAttr, model_validator, ValidationError, Field
+from pydantic import BaseModel, model_validator
 from typing import Literal
 from typing import Annotated
 
-
 # INCORPORATES TERMINAL BLOCK BOX AND SPRING TYPE --- 2 models within (TYPE 10/11)
-
 SY1_MFLD_TYPE_10_11_TERM_BLOCK_SPRING_TOKEN_MAP = [
     {"name": "prefix", "pattern": r"SS5Y", "length": 4},
     {"name": "series", "pattern": r"[357]", "length": 1},

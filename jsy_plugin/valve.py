@@ -9,8 +9,8 @@ class JSY_PLUGIN_VALVE_MODEL(BaseModel):
     static: Literal['00']
     coil_specs: Literal['', 'T'] = ''
     static2: Literal['5']
-    manual_override: Literal['', 'D', 'E'] = ''
     light_surge: Literal['U', 'Z', 'NZ']
+    manual_override: Literal['', 'D', 'E'] = ''
 
     @model_validator(mode='after')
     def check_conditions(self) -> 'JSY_PLUGIN_VALVE_MODEL':
@@ -43,6 +43,6 @@ PLUGIN_VALVE_TOKEN_MAP = [
     {"name": "coil_specs", "pattern": r"[T]?", "length": None},
     {"name": "separator", "pattern": r"-", "length": 1},
     {"name": "static2", "pattern": r"5", "length": 1},
-    {"name": "light_surge", "pattern": r"[U|Z|NZ]{1,2}", "length": None},
-    {"name": "manual_override", "pattern": r"[DE]?", "length": 1}
+    {"name": "light_surge", "pattern": r"(U|Z|NZ)", "length": None},
+    {"name": "manual_override", "pattern": r"[DE]?", "length": None}
 ]
