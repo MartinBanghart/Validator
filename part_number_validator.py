@@ -24,6 +24,9 @@ from SY1.valve_base_mounted import SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL, SY1_BASE
 # ----- SY -----
 from SY.valve_body_ported import SY_BODY_PORTED_VALVE_MODEL, SY_BODY_PORTED_VALVE_TOKEN_MAP
 
+# ----- Low Vacuum (HF) -----
+from HF.HF1B_ZL import HF1B_ZL_MODEL, HF1B_ZL_TOKEN_MAP 
+
 # ----- GENERAL FUNCTIONS -----
 from general_functions.parser import TokenMapParser
 # ----------------------------------------------------------------------
@@ -64,6 +67,9 @@ SY1_BASE_MOUNTED_PLUGIN_VALVE = r"^SY[357][ABC12345]0"
 
 # ---------------------- SY ---------------------------
 SY_BODY_PORTED_VALVE = r"^SY[3579][12345]20"
+
+# ---------------------- HF ---------------------------
+HF1B_ZL = r"^HF1B-ZL"
 
 # ---------- USER INPUT ----------
 
@@ -130,7 +136,12 @@ if part_number:
     elif re.match(SY_BODY_PORTED_VALVE, part_number):
         model = SY_BODY_PORTED_VALVE_MODEL
         token_map = SY_BODY_PORTED_VALVE_TOKEN_MAP
-
+        
+    # -------------------- HF -------------------------
+    elif re.match(HF1B_ZL, part_number):
+        model = HF1B_ZL_MODEL
+        token_map = HF1B_ZL_TOKEN_MAP
+        
     else:
     # checking valve options
         match = re.match(VALVE_DETECTOR, part_number)

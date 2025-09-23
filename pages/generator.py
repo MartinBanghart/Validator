@@ -38,6 +38,9 @@ from SY1.valve_base_mounted import SY1_BASE_MOUNTED_PLUGIN_VALVE_MODEL
 # -------------------------- SY ----------------------------
 from SY.valve_body_ported import SY_BODY_PORTED_VALVE_MODEL
 
+# -------------------------- HF ----------------------------
+from HF.HF1B_ZL import HF1B_ZL_MODEL
+
 # ----------------------------- Model Map (for user selection of models) -----------------------------
 
 MODEL_SERIES_MAP = {
@@ -64,7 +67,11 @@ MODEL_SERIES_MAP = {
 
     "SY": {
         "SY Body Ported Valve" : SY_BODY_PORTED_VALVE_MODEL
-    }
+    },
+    
+    "HF": {
+        "HF1B-ZL" : HF1B_ZL_MODEL
+    },
 }
 
 # ------------------------- Functions -----------------------------
